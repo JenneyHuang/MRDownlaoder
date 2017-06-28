@@ -183,9 +183,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 65);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(65, 12);
+            this.label1.Size = new System.Drawing.Size(29, 12);
             this.label1.TabIndex = 5;
-            this.label1.Text = "服务器文件";
+            this.label1.Text = "文件";
             // 
             // comboBox1
             // 
@@ -198,7 +198,7 @@
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(58, 20);
             this.comboBox1.TabIndex = 8;
-            this.comboBox1.Text = "MRO";
+            this.comboBox1.Text = "MRE";
             // 
             // dateTimePicker1
             // 
@@ -244,7 +244,7 @@
             this.comboBox2.Name = "comboBox2";
             this.comboBox2.Size = new System.Drawing.Size(45, 20);
             this.comboBox2.TabIndex = 9;
-            this.comboBox2.SelectedIndex = 20;
+            this.comboBox2.Text = "20";
             // 
             // programBindingSource
             // 
