@@ -10,6 +10,7 @@ using System.Collections;
 using Renci.SshNet;
 using System.Linq;
 using MROFtpDownloader.Properties;
+using System.Threading;
 //×××××××
 //待完成：1、添加根据映射表下载制定文件的功能。
 //          顺序，先从映射表里找数据，如果没有再从服务器中一个个找
@@ -31,7 +32,10 @@ namespace MROFtpDownloader
         private static bool isOutputFile; //是否输出ftp服务器文件列表
         private static string MRType;
         private static string Hour;
-
+        private static int restCnt;
+        private static List<ListViewItem> myCache;
+        private static List<string> listleft;
+        private int errNum;
         //private SystemParaReader spReader;
         public Form1()
         {
@@ -41,6 +45,21 @@ namespace MROFtpDownloader
             //Settings.Default.localpath = toolStripTextBox3.Text;
             //Settings.Default.datestr = dateTimePicker1.Value;
             Settings.Default.Save();
+            myCache = new List<ListViewItem>();
+        }
+        
+        void listView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
+        {
+            if (myCache != null)
+            {
+                e.Item = myCache[e.ItemIndex];
+            }
+            else
+            {
+                //A cache miss, so create a new ListViewItem and pass it back.
+                int x = e.ItemIndex * e.ItemIndex;
+                e.Item = new ListViewItem(x.ToString());
+            }
         }
         public static void setConString(string sevIP, string port, string usr, string pwd, string dfpath)
         {
@@ -55,6 +74,7 @@ namespace MROFtpDownloader
             string[] downloadFiles;
             StringBuilder result = new StringBuilder();
             FtpWebRequest reqFTP;
+            
             try
             {
                 reqFTP = (FtpWebRequest)FtpWebRequest.Create(new Uri("ftp://" + ftpServerIP + "/" + dfuPath));
@@ -91,15 +111,18 @@ namespace MROFtpDownloader
             StringBuilder result = new StringBuilder();
             List<string> ret = new List<string>();
             FtpWebRequest reqFTP;
+            
             try
             {
                 reqFTP = (FtpWebRequest)FtpWebRequest.Create(new Uri("ftp://" + ftpAds + "/" + ftpPath));
                 reqFTP.UseBinary = true;
                 reqFTP.Credentials = new NetworkCredential(ftpUsr, ftpPwd);
                 reqFTP.Method = WebRequestMethods.Ftp.ListDirectory;
+                reqFTP.Timeout = 1000;
+                //reqFTP.ReadWriteTimeout = 160;
                 WebResponse response = reqFTP.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream());
-
+                ShowInfo(textBox3, ""  + ftpAds + "：正在获取文件列表 ");
                 string line = reader.ReadLine();
                 while (line != null)
                 {
@@ -114,8 +137,9 @@ namespace MROFtpDownloader
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("(550)")){
+                if (ex.Message.Contains("(550)") && errNum <=3 ){
                     ftpPath = dfdate+ "\\" ;
+                    errNum++;
                     return GetFileListToList(ftpAds, ftpUsr, ftpPwd, ftpPath, fc, dfdate);
                 }
                 else
@@ -295,7 +319,7 @@ namespace MROFtpDownloader
             }
             return arlist;
         }
-        public List<string> txtFileToList(string path)
+        public static List<string> txtFileToList(string path)
         {
             List<string> arlist = new List<string>();
 
@@ -305,7 +329,9 @@ namespace MROFtpDownloader
                 StreamReader sr = new StreamReader(path);
                 while (sr.Peek() > -1)
                 {
-                    arlist.Add(sr.ReadLine());
+                    var s = sr.ReadLine();
+                    if(s.Length>0)
+                        arlist.Add(s);
                 }
                 sr.Close();
             }
@@ -324,7 +350,39 @@ namespace MROFtpDownloader
             sw.Close();
             fs.Close();
         }
+        
+        private void listView1_DragEnter(object sender, DragEventArgs e)
+        {
+            
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Link;
+                listView1.Cursor = System.Windows.Forms.Cursors.Arrow;  //指定鼠标形状（更好看）
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
 
+        private void listView1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            foreach (string file in files)
+            {
+                if (Path.GetExtension(file) == ".txt")  //判断文件类型，只接受txt文件
+                {
+                    //listView1.Text += file + "\r\n";
+                    ShowInfoFile(listView1, file);
+                    listView1.Cursor = System.Windows.Forms.Cursors.IBeam; //还原鼠标形状
+                }
+            }
+
+        }
+        
+        
+
+       
 
         private void 打开FTP服务器文件ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -396,37 +454,142 @@ namespace MROFtpDownloader
             Settings.Default.datestr = dateTimePicker1.Value;
             Settings.Default.Save();
         }
-        public static void ShowInfo(System.Windows.Forms.TextBox txtInfo, string Info)
+
+        private delegate void txt1Delegate(System.Windows.Forms.TextBox txtInfo, string Info);
+        public void ShowInfo(System.Windows.Forms.TextBox txtInfo, string Info)
+        {
+            if (txtInfo.InvokeRequired)
+            {
+                Invoke(new txt1Delegate(ShowInfo), txtInfo , Info );
+            }
+            else
+            {
+                txtInfo.AppendText(Info);
+                txtInfo.AppendText(Environment.NewLine);
+                txtInfo.ScrollToCaret();
+            }
+            
+        }
+        /*
+        public void ShowInfo(System.Windows.Forms.TextBox txtInfo, string Info)
         {
             txtInfo.AppendText(Info);
             txtInfo.AppendText(Environment.NewLine);
             txtInfo.ScrollToCaret();
         }
-        public static void ShowInfo(System.Windows.Forms.ListView listInfo, string Info)
+        */
+        public static void ShowInfo(System.Windows.Forms.ListView listInfo, List<string> list)
         {
-
-            listInfo.BeginUpdate();
+            myCache.Clear();
+           // listInfo.Clear();
+            foreach (string row in list)
+            {
+                if (row != null)
+                {
+                    ListViewItem lvi = new ListViewItem();
+                    lvi.Text = row;
+                    myCache.Add(lvi);
+                }
+            }
+            listInfo.VirtualListSize = myCache.Count;
+            listInfo.Invalidate();
+            listInfo.EnsureVisible(0);
+            //ListViewItem lvi2 = listInfo.FindItemWithText("111111");
+            ////Select the item found and scroll it into view.
+            //if (lvi2 != null)
+            //{
+            //    listInfo.SelectedIndices.Add(lvi2.Index);
+            //    listInfo.EnsureVisible(lvi2.Index);
+            //}
+            /*listInfo.BeginUpdate();
             ListViewItem lvi = new ListViewItem();
             lvi.Text = Info;
 
             listInfo.Items.Add(lvi);
             listInfo.EndUpdate();
+            listInfo.EnsureVisible(0);*/
+        }
+        
+        public void ShowInfoFile(System.Windows.Forms.ListView listInfo, string Info)
+        {
+            myCache.Clear();
+            toolStripTextBox2.Text = Info;
+            List<string> Lstr = txtFileToList(Info);
+            //listInfo.BeginUpdate();
+            foreach (string row in Lstr)
+            {
+                if (row != null) {
+                    ListViewItem lvi = new ListViewItem();
+                    lvi.Text = row;
+                    myCache.Add(lvi);
+                }
+                
+            }
+            listInfo.VirtualListSize = myCache.Count;
+            listInfo.Invalidate();
+            //listInfo.EndUpdate();
             listInfo.EnsureVisible(0);
+        }
+        private delegate void lvDelegate(List<string> list);
+        public void ShowlvInfo(List<string> list)
+        {
+            if (listView1.InvokeRequired)
+            {
+                Invoke(new lvDelegate(ShowlvInfo), new List<string>[] { list });
+            }
+            else
+            {
+                myCache.Clear();
+                // listInfo.Clear();
+                foreach (string row in list)
+                {
+                    if (row != null)
+                    {
+                        ListViewItem lvi = new ListViewItem();
+                        lvi.Text = row;
+                        myCache.Add(lvi);
+                    }
+                }
+                listView1.VirtualListSize = myCache.Count;
+                listView1.Invalidate();
+                //listView1.EnsureVisible(0);
+            }
+
         }
         private void button1_Click(object sender, EventArgs e)
         {
+            button1.Enabled = false;
+            Thread thread = new Thread(new ThreadStart(LoadData));
+            thread.IsBackground = true;
+            thread.Start();
+
+        }
+        public void LoadData()
+        {
+
             ftpinfoTable = toolStripTextBox1.Text;
             inNeedInfo = toolStripTextBox2.Text;
             localpath = toolStripTextBox3.Text;
             isOutputFile = 输出ftp上的文件列表ToolStripMenuItem.Checked;
-            MRType = comboBox1.SelectedItem.ToString();
-            Hour = comboBox2.SelectedItem.ToString();
+            this.BeginInvoke(new MethodInvoker(delegate ()
+            {
+                MRType = comboBox1.SelectedItem.ToString();
+                Hour = comboBox2.SelectedItem.ToString();
+            }));
+            // MRType = comboBox1.SelectedItem.ToString();
+            // Hour = comboBox2.SelectedItem.ToString();
             //根据小区属性确定待下载的小区数据文件
             //ArrayList list1 = new ArrayList();
             //list1 = txtToList(inNeedInfo);
+
             var List2 = txtFileToList(inNeedInfo);
-            int cnt = List2.Count();
-            ShowInfo(textBox1, cnt.ToString());
+            restCnt = List2.Count();
+            listleft = List2;
+
+            //ShowInfo(listView1, List2);
+            ShowlvInfo(List2);
+
+            //ShowInfo(textBox1, cnt.ToString());
             //读取LTE MR服务器文件 获得服务器IP,用户名，密码和文件存储目录
             string ftpAds, ftpPort, ftpUsr, ftpPwd, ftpPath, fc;
 
@@ -444,29 +607,31 @@ namespace MROFtpDownloader
                     ftpPath = ds.Tables[0].Rows[i]["文件存储目录"].ToString();
                     fc = ds.Tables[0].Rows[i]["厂商"].ToString();
                     //int daydiff = -1;//昨天为-1
-                    string dfdate; // dfdate = DateTime.Today.AddDays(daydiff).ToString("yyyy-MM-dd"); //获取日期字符串
-                                   //dfdate = DateTime.Today.AddDays(daydiff).ToString("yyyyMMdd"); //获取日期字符串
-                    if (fc == "大唐")
-                    {
-                        dateTimePicker1.CustomFormat = "yyyy-MM-dd";
-                    }
-                    else
-                    {
-                        dateTimePicker1.CustomFormat = "yyyyMMdd"; 
-                    }
+                    string dfdate=""; // dfdate = DateTime.Today.AddDays(daydiff).ToString("yyyy-MM-dd"); //获取日期字符串
+                                      //dfdate = DateTime.Today.AddDays(daydiff).ToString("yyyyMMdd"); //获取日期字符串
                     dfdate = dateTimePicker1.Text;
+                    if (fc == "大唐")
+                        dfdate = dfdate.Substring(0, 4) + "-" + dfdate.Substring(4, 2) + "-" + dfdate.Substring(6, 2); 
                     dfudate = dfdate;
-                    ShowInfo(textBox3, "第" + (i + 1) + "服务器:" + fc + " " + ftpAds);
+                    ShowInfo(textBox3, "正在检索第" + (i + 1) + "个服务器:" + fc + " " + ftpAds + " 余" + restCnt + "个站未下载");
                     takeFileFromFtp(ftpAds, ftpPort, ftpUsr, ftpPwd, ftpPath, fc, List2, dfdate, isOutputFile, localpath);
-
-
+                   // MessageBox.Show("ok");
                 }
+                ShowInfo(textBox3, "检索完成，余 " + restCnt + " 个站未下载");
+                ds.Clear();
+                ds.Dispose();
+                this.BeginInvoke(new MethodInvoker(delegate ()
+                {
+                    button1.Enabled = true;
+                }));
             }
             catch (Exception ex)
             {
                 throw ex;
             }
+            
         }
+
         public void takeFileFromFtp(string ftpAds, string ftpPort, string ftpUsr, string ftpPwd, string ftpPath, string fc, List<string> list2, string dfdate, bool isOutputFile, string localpath)
         {
 
@@ -486,10 +651,14 @@ namespace MROFtpDownloader
             if (isOutputFile) writeToFile(localpath + "ftp小区映射" + dfdate.Replace("-","") + ".csv", dfdate, ftpAds, fc, str1);
            
             var Listret = list2.Intersect(str1).ToList();  //求服务器的基站列表与文件基站列表的交集
-
+            
+            listleft = listleft.Except(str1).ToList();
             
             downloadFtpFile(Listret, ftpAds, ftpPort, ftpUsr, ftpPwd, ftpPath, localpath, dfdate, fc);
-            ShowInfo(textBox1, (list2.Count() - Listret.Count()).ToString());
+            restCnt = restCnt - Listret.Count();
+
+            //ShowInfo(listView1, listleft);
+            ShowlvInfo(listleft);
         }
 
 
@@ -502,7 +671,8 @@ namespace MROFtpDownloader
             foreach (string s in listret)
             {
                 string s1 = s;
-                ShowInfo(textBox2, "正在下载"+ fc + "," + ftpAds + ":第" + ++i +"个站:" + s1);
+                i++;
+                ShowInfo(textBox2, "正在下载"+ fc + "," + ftpAds + ":第" + i +"个站:" + s1);
                 if (fc == "大唐")
                 {
                     s1 = "ENB=" + s1;
@@ -552,6 +722,7 @@ namespace MROFtpDownloader
                         ShowInfo(textBox3, "获取文件信息失败:" + ex.Message + ftpServerIP + "操作失败");
                     }
                 }
+                ShowInfo(textBox2, "下载完成" + fc + "," + ftpAds + ":第" + i + "个站:" + s1);
             }
         }
         public void DownLoadFtpOneFile(FtpWebRequest reqFTP, string ftpAds,string ftpUsr,string ftpPwd,string localPath, string serverPath, string serverfile)
@@ -592,7 +763,7 @@ namespace MROFtpDownloader
             }
         }
 
-
+        
     }
 
 

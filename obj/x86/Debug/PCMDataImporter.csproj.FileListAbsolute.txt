@@ -1,0 +1,21 @@
+E:\01.项目软件\004 杂项\PCMDataImporter\PCMDataImporter\bin\Debug\PCMDataImporter.exe
+E:\01.项目软件\004 杂项\PCMDataImporter\PCMDataImporter\bin\Debug\PCMDataImporter.pdb
+E:\01.项目软件\004 杂项\PCMDataImporter\PCMDataImporter\obj\x86\Debug\PCMDataImporter.Properties.Resources.resources
+E:\01.项目软件\004 杂项\PCMDataImporter\PCMDataImporter\obj\x86\Debug\PCMDataImporter.csproj.GenerateResource.Cache
+E:\01.项目软件\004 杂项\PCMDataImporter\PCMDataImporter\obj\x86\Debug\PCMDataImporter.exe
+E:\01.项目软件\004 杂项\PCMDataImporter\PCMDataImporter\obj\x86\Debug\PCMDataImporter.pdb
+D:\learn\ftp\PCMDataImporter\bin\Debug\MROFtpDownloader.exe.config
+D:\learn\ftp\PCMDataImporter\bin\Debug\MROFtpDownloader.exe
+D:\learn\ftp\PCMDataImporter\bin\Debug\MROFtpDownloader.pdb
+D:\learn\ftp\PCMDataImporter\bin\Debug\Renci.SshNet.Async.dll
+D:\learn\ftp\PCMDataImporter\bin\Debug\Renci.SshNet.dll
+D:\learn\ftp\PCMDataImporter\bin\Debug\Renci.SshNet.xml
+D:\learn\ftp\PCMDataImporter\bin\Debug\Renci.SshNet.Async.xml
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\PCMDataImporter.csprojResolveAssemblyReference.cache
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\Interop.ADOR.dll
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\PCMDataImporter.csproj.ResolveComReference.cache
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\MROFtpDownloader.Form1.resources
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\MROFtpDownloader.Properties.Resources.resources
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\PCMDataImporter.csproj.GenerateResource.Cache
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\MROFtpDownloader.exe
+D:\learn\ftp\PCMDataImporter\obj\x86\Debug\MROFtpDownloader.pdb

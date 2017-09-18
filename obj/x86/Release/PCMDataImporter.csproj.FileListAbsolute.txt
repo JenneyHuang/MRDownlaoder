@@ -1,0 +1,15 @@
+D:\learn\ftp\PCMDataImporter\bin\Release\MROFtpDownloader.exe.config
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\Interop.ADOR.dll
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\PCMDataImporter.csproj.ResolveComReference.cache
+D:\learn\ftp\PCMDataImporter\bin\Release\MROFtpDownloader.exe
+D:\learn\ftp\PCMDataImporter\bin\Release\MROFtpDownloader.pdb
+D:\learn\ftp\PCMDataImporter\bin\Release\Renci.SshNet.Async.dll
+D:\learn\ftp\PCMDataImporter\bin\Release\Renci.SshNet.dll
+D:\learn\ftp\PCMDataImporter\bin\Release\Renci.SshNet.xml
+D:\learn\ftp\PCMDataImporter\bin\Release\Renci.SshNet.Async.xml
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\MROFtpDownloader.Form1.resources
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\MROFtpDownloader.Properties.Resources.resources
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\PCMDataImporter.csproj.GenerateResource.Cache
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\MROFtpDownloader.exe
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\MROFtpDownloader.pdb
+D:\learn\ftp\PCMDataImporter\obj\x86\Release\PCMDataImporter.csprojResolveAssemblyReference.cache
